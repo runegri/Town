@@ -46,12 +46,7 @@ namespace Town
 
         public IEnumerable<Edge> GetEdges()
         {
-            for (var i = 0; i < Circumference.Count - 1; i++)
-            {
-                var p1 = Circumference[i];
-                var p2 = Circumference[i + 1];
-                yield return new Edge(p1, p2);
-            }
+            return Edge.FromPointList(Circumference);
         }
 
         private void PlaceGatesAndTowers(IEnumerable<Vector2> allowedTowerPositions, int minNumberOfGates, int maxNumberOfGates, List<Vector2> illegalGatePositions)

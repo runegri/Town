@@ -8,6 +8,7 @@ namespace Town
     public class TownRendererOptions
     {
         public bool RenderOverlay { get; set; }
+        public bool RenderWalls { get; set; }
 
         public static TownRendererOptions Default => new TownRendererOptions();
     }
@@ -48,7 +49,7 @@ namespace Town
 
             sb.Append(@"<rect width=""1500"" height=""1500"" x=""0"" y=""0"" fill=""#FCFCFA"" />");
 
-            var geometry = _town.GetTownGeometry();
+            var geometry = _town.GetTownGeometry(_options);
 
             foreach (var water in geometry.Water)
             {
@@ -64,7 +65,6 @@ namespace Town
             }
 
             DrawRoads(geometry, sb);
-
             DrawWalls(geometry, sb);
 
             id = 0;

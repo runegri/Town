@@ -65,6 +65,7 @@ namespace Town
 
             return new Rectangle(minX, minY, maxX - minX, maxY - minY);
         }
+
         public Rectangle GetCityWallsBounds()
         {
             var vertices = Patches.Where(p => p.WithinCity).SelectMany(p => p.Shape.Vertices);
@@ -277,7 +278,7 @@ namespace Town
                 var street = topology.BuildPath(gate, endPoint, topology.Outer);
                 if (street != null)
                 {
-                    roads.Add(street);
+                    //roads.Add(street);
                     streets.Add(street);
 
                     if (CityWall.Gates.Contains(gate))
@@ -495,7 +496,7 @@ namespace Town
             }
         }
 
-        public TownGeometry GetTownGeometry()
+        public TownGeometry GetTownGeometry(TownRendererOptions options)
         {
             var geometry = new TownGeometry();
 
@@ -509,10 +510,23 @@ namespace Town
             var buildings = buildingPlacer.PopulateBuildings();
 
             geometry.Buildings.AddRange(buildings);
-            geometry.Walls.AddRange(CityWall.GetEdges().Union(Castle.Wall.GetEdges()).Distinct());
-            geometry.Towers.AddRange(CityWall.Towers.Union(Castle.Wall.Towers));
-            geometry.Gates.AddRange(CityWall.Gates.Union(Castle.Wall.Gates));
+            if (options.RenderWalls)
+            {
+                geometry.Walls.AddRange(CityWall.GetEdges().Union(Castle.Wall.GetEdges()).Distinct());
+                geometry.Towers.AddRange(CityWall.Towers.Union(Castle.Wall.Towers));
+                geometry.Gates.AddRange(CityWall.Gates.Union(Castle.Wall.Gates));
+            }
+            else
+            {
+                var castleWall = CityWall.GetEdges().Union(Castle.Wall.GetEdges()).Distinct().SelectMany(e => new[]{e.A, e.B}).Where(w => Castle.Patch.Shape.Vertices.Contains(w)).ToList();
+                var towers = CityWall.Towers.Union(Castle.Wall.Towers).Intersect(castleWall);
+                var gates = CityWall.Gates.Union(Castle.Wall.Gates).Intersect(castleWall);
+                geometry.Walls.AddRange(Edge.FromPointList(castleWall));
+                geometry.Towers.AddRange(towers);
+                geometry.Gates.AddRange(gates);
+            }
             geometry.Roads.AddRange(Roads);
+            geometry.Roads.AddRange(Streets);
 
             geometry.Overlay.AddRange(Patches);
             geometry.Water.AddRange(Patches.Where(p => p.Water).Select(p => p.Shape));

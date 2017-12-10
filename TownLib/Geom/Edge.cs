@@ -19,6 +19,16 @@ namespace Town.Geom
             return new Edge(edge.B, edge.A);
         }
 
+        public static IEnumerable<Edge> FromPointList(List<Vector2> points)
+        {
+            for (var i = 0; i < points.Count - 1; i++)
+            {
+                var p1 = points[i];
+                var p2 = points[i + 1];
+                yield return new Edge(p1, p2);
+            }
+        }
+
         public bool EndsIn(Vector2 point)
         {
             return A.Equals(point) || B.Equals(point);
