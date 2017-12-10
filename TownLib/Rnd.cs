@@ -9,14 +9,7 @@ namespace Town
 
         public static int Seed
         {
-            get
-            {
-                if (_seed == 0)
-                {
-                    Seed = new Random().Next();
-                }
-                return _seed;
-            }
+            get => _seed;
             set
             {
                 _seed = value;

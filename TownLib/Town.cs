@@ -7,6 +7,7 @@ namespace Town
 {
     public class Town
     {
+        private readonly TownOptions _options;
         public readonly int Width = 1500;
         public readonly int Height = 1500;
         private const int PatchMultiplier = 8;
@@ -23,14 +24,15 @@ namespace Town
 
         public List<Vector2> WaterBorder { get; }
 
-        public Town(int numPatches)
+        public Town(TownOptions options)
         {
+            _options = options;
 
             var ok = false;
             while (!ok)
             {
 
-                NumPatches = numPatches;
+                NumPatches = options.NumberOfPatches;
                 Roads = new List<List<Vector2>>();
                 Streets = new List<List<Vector2>>();
                 Gates = new List<Vector2>();
@@ -496,7 +498,7 @@ namespace Town
             }
         }
 
-        public TownGeometry GetTownGeometry(TownRendererOptions options)
+        public TownGeometry GetTownGeometry(TownOptions options)
         {
             var geometry = new TownGeometry();
 

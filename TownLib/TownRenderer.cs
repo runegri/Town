@@ -5,24 +5,16 @@ using Town.Geom;
 
 namespace Town
 {
-    public class TownRendererOptions
-    {
-        public bool RenderOverlay { get; set; }
-        public bool RenderWalls { get; set; }
-
-        public static TownRendererOptions Default => new TownRendererOptions();
-    }
-
     public class TownRenderer
     {
         private readonly Town _town;
-        private readonly TownRendererOptions _options;
+        private readonly TownOptions _options;
 
-        public TownRenderer(Town town, TownRendererOptions options = null)
+        public TownRenderer(Town town, TownOptions options = null)
         {
             if (options == null)
             {
-                options = TownRendererOptions.Default;
+                options = TownOptions.Default;
             }
 
             _town = town;
@@ -82,7 +74,7 @@ namespace Town
 
             //sb.Append(geometry.WaterBorder.ToSvgPolygon("road-outer"));
 
-            sb.Append($"<text x=\"{bounds.X + 20}\" y=\"{bounds.Y + 30}\">" + Rnd.Seed + "</text>");
+            sb.Append($"<text x=\"{bounds.X + 20}\" y=\"{bounds.Y + 30}\">" + _options.Seed + "</text>");
 
             sb.Append("</svg>");
             return sb.ToString();

@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using Town.Geom;
 
 namespace Town
 {
@@ -14,16 +12,27 @@ namespace Town
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
+            var options = new TownOptions
+            {
+                RenderOverlay = false,
+                RenderWalls = true,
+                NumberOfPatches = 35
+            };
+
             if (args.Any() && int.TryParse(args[0], out var seed))
             {
-                Rnd.Seed = seed;
+                options.Seed = seed;
+            }
+            else
+            {
+                options.Seed = new Random().Next();
             }
 
-            var nPatches = 35;
+            Rnd.Seed = options.Seed.Value;
 
-            var town = new Town(nPatches);
+            var town = new Town(options);
 
-            var img = new TownRenderer(town, new TownRendererOptions{RenderOverlay = false}).DrawTown();
+            var img = new TownRenderer(town, options).DrawTown();
 
             File.WriteAllText(@"C:\temp\town.svg", img);
         }
