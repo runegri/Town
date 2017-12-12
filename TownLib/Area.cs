@@ -27,12 +27,12 @@ namespace Town
         public CastleArea(Patch patch) : base(patch)
         { }
 
-        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out float emptyProbability, out float minArea)
+        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out Func<Polygon, float> emptyProbabilityFunc, out float minArea)
         {
             minArea = 200 + 200 * (float)Rnd.NextDouble() * (float)Rnd.NextDouble();
             gridChaos = 0;
             sizeChaos = 0;
-            emptyProbability = 0.8f;
+            emptyProbabilityFunc = p => 0.8f;
         }
     }
 
@@ -41,12 +41,32 @@ namespace Town
         public PoorArea(Patch patch) : base(patch)
         { }
 
-        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out float emptyProbability, out float minArea)
+        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out Func<Polygon, float> emptyProbabilityFunc, out float minArea)
         {
             minArea = 10 + 30 * (float)Rnd.NextDouble() * (float)Rnd.NextDouble();
             gridChaos = 0.2f + (float)Rnd.NextDouble() * 0.02f;
             sizeChaos = 1f;
-            emptyProbability = 0.01f;
+            emptyProbabilityFunc = p => 0.01f;
+        }
+    }
+    public class OutsideWallArea : TownArea
+    {
+        public OutsideWallArea(Patch patch) : base(patch)
+        { }
+
+        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out Func<Polygon, float> emptyProbabilityFunc, out float minArea)
+        {
+            minArea = 5 + 30 * (float)Rnd.NextDouble() * (float)Rnd.NextDouble();
+            gridChaos = 0.4f + (float)Rnd.NextDouble() * 0.02f;
+            sizeChaos = 1f;
+            var closestWallPoint = Patch.Town.CityWall.Circumference.OrderBy(p => (p - Patch.Center).Length).First();
+            var centerDistance = (Patch.Center - closestWallPoint).Length;
+            emptyProbabilityFunc = p =>
+            {
+                var distanceToWall = (p.Center - closestWallPoint).Length;
+                var normalizedDistanceSq = (float) Math.Pow(distanceToWall / (1.5f * centerDistance), 3);
+                return Math.Max(Math.Min(normalizedDistanceSq, 0.95f), 0.05f);
+            };
         }
     }
 
@@ -56,12 +76,12 @@ namespace Town
         {
         }
 
-        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out float emptyProbability, out float minArea)
+        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out Func<Polygon, float> emptyProbabilityFunc, out float minArea)
         {
             minArea = 60 + 160 * (float)Rnd.NextDouble() * (float)Rnd.NextDouble();
             gridChaos = 0.05f + (float)Rnd.NextDouble() * 0.02f;
             sizeChaos = 0.2f;
-            emptyProbability = 0.2f;
+            emptyProbabilityFunc = p => 0.2f;
         }
     }
 
@@ -77,7 +97,7 @@ namespace Town
 
             foreach (var edge in Patch.Edges)
             {
-                if (_town.CityWall.Borders(edge))
+                if (_town.CityWall.Borders(edge) && _town.Options.Walls)
                 {
                     insetDist.Add(MainStreet / 2);
                 }
@@ -109,7 +129,7 @@ namespace Town
             return Patch.Shape.Buffer(insetDist);
         }
 
-        private static IEnumerable<Polygon> CreateAlleys(Polygon block, float minArea, float gridChaos, float sizeChaos, float emptyProbability, bool split, int levels = 0)
+        private static IEnumerable<Polygon> CreateAlleys(Polygon block, float minArea, float gridChaos, float sizeChaos, Func<Polygon, float> emptyProbabilityFunc, bool split, int levels = 0)
         {
             Vector2 point = Vector2.Zero;
             var length = float.MinValue;
@@ -138,14 +158,14 @@ namespace Town
             {
                 if (half.Area() < minArea * Math.Pow(2, 4 * sizeChaos * (Rnd.NextDouble() - 0.5f)) || levels > 5)
                 {
-                    if (!Rnd.NextBool(emptyProbability))
+                    if (!Rnd.NextBool(emptyProbabilityFunc(half)))
                     {
                         buildings.Add(half);
                     }
                 }
                 else
                 {
-                    buildings.AddRange(CreateAlleys(half, minArea, gridChaos, sizeChaos, emptyProbability, half.Area() > minArea / (Rnd.NextDouble() * Rnd.NextDouble()), levels + 1));
+                    buildings.AddRange(CreateAlleys(half, minArea, gridChaos, sizeChaos, emptyProbabilityFunc, half.Area() > minArea / (Rnd.NextDouble() * Rnd.NextDouble()), levels + 1));
                 }
             }
 
@@ -160,10 +180,10 @@ namespace Town
             }
 
             var block = GetCityBlock();
-            GetBuildingSpecs(out var gridChaos, out var sizeChaos, out var emptyProbability, out var minArea);
+            GetBuildingSpecs(out var gridChaos, out var sizeChaos, out var emptyProbabilityFunc, out var minArea);
 
-            foreach (var building in CreateAlleys(block, minArea, gridChaos, sizeChaos, emptyProbability, true))
-            {              
+            foreach (var building in CreateAlleys(block, minArea, gridChaos, sizeChaos, emptyProbabilityFunc, true))
+            {
                 building.GetLongestEdge(out var e1, out var e2, out var len);
 
                 var angle = (e2 - e1).Angle();
@@ -179,12 +199,12 @@ namespace Town
             }
         }
 
-        protected virtual void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out float emptyProbability, out float minArea)
+        protected virtual void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out Func<Polygon, float> emptyProbabilityFunc, out float minArea)
         {
             minArea = 10 + 80 * (float)Rnd.NextDouble() * (float)Rnd.NextDouble();
             gridChaos = 0.05f + (float)Rnd.NextDouble() * 0.02f;
             sizeChaos = 0.06f;
-            emptyProbability = 0.02f;
+            emptyProbabilityFunc = p => 0.02f;
         }
 
         public override IEnumerable<Polygon> GetGeometry()
@@ -209,19 +229,20 @@ namespace Town
 
     public class FarmArea : TownArea
     {
-        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out float emptyProbability, out float minArea)
+        protected override void GetBuildingSpecs(out float gridChaos, out float sizeChaos, out Func<Polygon, float> emptyProbabilityFunc, out float minArea)
         {
             minArea = 10 + 80 * (float)Rnd.NextDouble() * (float)Rnd.NextDouble();
             gridChaos = 0.05f + (float)Rnd.NextDouble() * 0.02f;
             sizeChaos = 2f;
-            emptyProbability = 0.99f;
+            emptyProbabilityFunc = p => 0.99f;
         }
 
         public FarmArea(Patch patch) : base(patch)
         { }
     }
 
-    public class EmptyArea : Area {
+    public class EmptyArea : Area
+    {
         public EmptyArea(Patch patch) : base(patch)
         {
         }

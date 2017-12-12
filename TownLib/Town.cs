@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Town.Geom;
 
@@ -7,7 +8,7 @@ namespace Town
 {
     public class Town
     {
-        private readonly TownOptions _options;
+        public readonly TownOptions Options;
         public readonly int Width = 1500;
         public readonly int Height = 1500;
         private const int PatchMultiplier = 8;
@@ -26,7 +27,7 @@ namespace Town
 
         public Town(TownOptions options)
         {
-            _options = options;
+            Options = options;
 
             var ok = false;
             while (!ok)
@@ -141,7 +142,10 @@ namespace Town
 
             var circumference = FindCircumference(patchesInTown);
             var smoothAmount = Math.Min(1f, 40f / circumference.Vertices.Count);
-            SmoothPatches(circumference, smoothAmount);
+            if (Options.Walls)
+            {
+                SmoothPatches(circumference, smoothAmount);
+            }
 
             var waterCircumference = FindCircumference(Patches.Where(p => p.Water));
             SmoothPatches(waterCircumference, 0.2f);
@@ -438,7 +442,14 @@ namespace Town
                     }
                     else
                     {
-                        patch.Area = new FarmArea(patch);
+                        if (patch.Shape.Vertices.Intersect(CityWall.Circumference).Any())
+                        {
+                            patch.Area = new OutsideWallArea(patch);
+                        }
+                        else
+                        {
+                            patch.Area = new FarmArea(patch);
+                        }
                     }
                 }
             }
