@@ -67,7 +67,7 @@ namespace Town
                 id++;
             }
 
-            if (_options.RenderOverlay)
+            if (_options.Overlay)
             {
                 DrawOverlay(geometry, sb);
             }

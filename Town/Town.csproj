@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="1.9.71" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TownLib\TownLib.csproj" />
   </ItemGroup>
 

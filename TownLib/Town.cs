@@ -32,7 +32,7 @@ namespace Town
             while (!ok)
             {
 
-                NumPatches = options.NumberOfPatches;
+                NumPatches = options.Patches;
                 Roads = new List<List<Vector2>>();
                 Streets = new List<List<Vector2>>();
                 Gates = new List<Vector2>();
@@ -512,7 +512,7 @@ namespace Town
             var buildings = buildingPlacer.PopulateBuildings();
 
             geometry.Buildings.AddRange(buildings);
-            if (options.RenderWalls)
+            if (options.Walls)
             {
                 geometry.Walls.AddRange(CityWall.GetEdges().Union(Castle.Wall.GetEdges()).Distinct());
                 geometry.Towers.AddRange(CityWall.Towers.Union(Castle.Wall.Towers));

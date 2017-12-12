@@ -2,11 +2,11 @@
 {
     public class TownOptions
     {
-        public bool RenderOverlay { get; set; }
-        public bool RenderWalls { get; set; }
-        public int NumberOfPatches { get; set; }
+        public bool Overlay { get; set; }
+        public bool Walls { get; set; }
+        public int Patches { get; set; }
         public int? Seed { get; set; }
 
-        public static TownOptions Default => new TownOptions { NumberOfPatches = 35 };
+        public static TownOptions Default => new TownOptions { Patches = 35 };
     }
 }

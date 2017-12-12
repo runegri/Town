@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using CommandLine;
 
 namespace Town
 {
@@ -12,31 +13,45 @@ namespace Town
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-            var options = new TownOptions
+            var options = new Options();
+            var valid = Parser.Default.ParseArgumentsStrict(args, options);
+
+            if (!valid)
             {
-                RenderOverlay = false,
-                RenderWalls = true,
-                NumberOfPatches = 35
+                throw new ArgumentException("Invalid application arguments");
+            }
+
+            var townOptions = new TownOptions
+            {
+                Overlay = options.Overlay,
+                Patches = options.Patches,
+                Walls = options.Walls,
+                Seed = options.Seed ?? new Random().Next()
             };
 
-            if (args.Any() && int.TryParse(args[0], out var seed))
-            {
-                options.Seed = seed;
-            }
-            else
-            {
-                options.Seed = new Random().Next();
-            }
+            Rnd.Seed = townOptions.Seed.Value;
 
-            Rnd.Seed = options.Seed.Value;
+            var town = new Town(townOptions);
 
-            var town = new Town(options);
-
-            var img = new TownRenderer(town, options).DrawTown();
+            var img = new TownRenderer(town, townOptions).DrawTown();
 
             File.WriteAllText(@"C:\temp\town.svg", img);
         }
 
   
+    }
+    public class Options
+    {
+        [Option('o', DefaultValue = false, Required = false)]
+        public bool Overlay { get; set; }
+
+        [Option('w', DefaultValue = false, Required = false)]
+        public bool Walls { get; set; }
+
+        [Option('p', DefaultValue = 35, Required = false)]
+        public int Patches { get; set; }
+
+        [Option('s', DefaultValue = null, Required = false)]
+        public int? Seed { get; set; }
     }
 }
