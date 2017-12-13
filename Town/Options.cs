@@ -15,5 +15,9 @@ namespace Town
 
         [Option('s', DefaultValue = null, Required = false)]
         public int? Seed { get; set; }
+
+        [Option('t', DefaultValue = false, Required = false)]
+        public bool Water { get; set; }
+
     }
 }

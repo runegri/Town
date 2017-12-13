@@ -108,27 +108,35 @@ namespace Town
 
             var patchesInTown = Patches.OrderBy(p => (Center - p.Center).Length).Take(NumPatches).ToList();
 
-            // Find random patch at the outside of town
-            var firstWaterPatch = patchesInTown.Where(p => p.GetAllNeighbours().Any(n => !n.WithinCity)).OrderBy(p => Rnd.NextDouble()).First();
-            firstWaterPatch.Water = true;
-
-            var waterDirection = Vector2.Normalize(firstWaterPatch.Center - Center);
-
-            var toCheck = new List<Patch> { firstWaterPatch };
-            while (toCheck.Any())
+            // Find random patch at the outside of town to place water
+            if (Options.Water)
             {
-                var checking = toCheck[0];
-                toCheck.RemoveAt(0);
+                var firstWaterPatch = patchesInTown.Where(p => p.GetAllNeighbours().Any(n => !n.WithinCity))
+                    .OrderBy(p => Rnd.NextDouble()).First();
+                firstWaterPatch.Water = true;
 
-                var waterPatches = checking.GetAllNeighbours().Except(patchesInTown).Where(n => Math.Abs((Center - n.Center).AngleComparedTo(waterDirection)) < Math.PI / 4).Where(n => !n.Water).ToList();
-                foreach (var waterPatch in waterPatches)
+                var waterDirection = Vector2.Normalize(firstWaterPatch.Center - Center);
+
+                var toCheck = new List<Patch> { firstWaterPatch };
+                while (toCheck.Any())
                 {
-                    waterPatch.Water = true;
-                    toCheck.Add(waterPatch);
+                    var checking = toCheck[0];
+                    toCheck.RemoveAt(0);
+
+                    var waterPatches = checking.GetAllNeighbours().Except(patchesInTown)
+                        .Where(n => Math.Abs((Center - n.Center).AngleComparedTo(waterDirection)) < Math.PI / 4)
+                        .Where(n => !n.Water).ToList();
+                    foreach (var waterPatch in waterPatches)
+                    {
+                        waterPatch.Water = true;
+                        toCheck.Add(waterPatch);
+                    }
                 }
+
             }
 
-            patchesInTown = Patches.Where(p => !p.Water).OrderBy(p => (Center - p.Center).Length).Take(NumPatches).ToList();
+            patchesInTown = Patches.Where(p => !p.Water).OrderBy(p => (Center - p.Center).Length).Take(NumPatches)
+                .ToList();
 
             foreach (var patch in patchesInTown)
             {
@@ -147,10 +155,13 @@ namespace Town
                 SmoothPatches(circumference, smoothAmount);
             }
 
-            var waterCircumference = FindCircumference(Patches.Where(p => p.Water));
-            SmoothPatches(waterCircumference, 0.2f);
-            WaterBorder.Clear();
-            WaterBorder.AddRange(waterCircumference.Vertices);
+            if (Options.Water)
+            {
+                var waterCircumference = FindCircumference(Patches.Where(p => p.Water));
+                SmoothPatches(waterCircumference, 0.2f);
+                WaterBorder.Clear();
+                WaterBorder.AddRange(waterCircumference.Vertices);
+            }
         }
 
         private void SmoothPatches(Polygon vertices, float smoothAmount)
@@ -225,29 +236,27 @@ namespace Town
             }
 
             // Make sure the wall starts and ends at the sea
-            var seaPoints = allowedTowerPositions.Where(t => Patches.Any(p => p.Water && p.Shape.Vertices.Contains(t))).ToList();
-
-            if (seaPoints.Count != 2)
+            if (Options.Water)
             {
-                var bbb = 0;
-            }
+                var seaPoints = allowedTowerPositions.Where(t => Patches.Any(p => p.Water && p.Shape.Vertices.Contains(t))).ToList();
 
-            var lastSeaPoint = seaPoints[1];
-            var firstSeaPoint = seaPoints[0];
+                var lastSeaPoint = seaPoints[1];
+                var firstSeaPoint = seaPoints[0];
 
-            var minIndex = Math.Min(allowedTowerPositions.IndexOf(lastSeaPoint), allowedTowerPositions.IndexOf(firstSeaPoint));
-            var maxIndex = Math.Max(allowedTowerPositions.IndexOf(lastSeaPoint), allowedTowerPositions.IndexOf(firstSeaPoint));
+                var minIndex = Math.Min(allowedTowerPositions.IndexOf(lastSeaPoint), allowedTowerPositions.IndexOf(firstSeaPoint));
+                var maxIndex = Math.Max(allowedTowerPositions.IndexOf(lastSeaPoint), allowedTowerPositions.IndexOf(firstSeaPoint));
 
-            if (minIndex != 0 && maxIndex != allowedTowerPositions.Count - 1)
-            {
-                var seaPointIndex = allowedTowerPositions.IndexOf(lastSeaPoint);
-
-                while (seaPointIndex > 0)
+                if (minIndex != 0 && maxIndex != allowedTowerPositions.Count - 1)
                 {
-                    var point = allowedTowerPositions[0];
-                    allowedTowerPositions.RemoveAt(0);
-                    allowedTowerPositions.Add(point);
-                    seaPointIndex = allowedTowerPositions.IndexOf(lastSeaPoint);
+                    var seaPointIndex = allowedTowerPositions.IndexOf(lastSeaPoint);
+
+                    while (seaPointIndex > 0)
+                    {
+                        var point = allowedTowerPositions[0];
+                        allowedTowerPositions.RemoveAt(0);
+                        allowedTowerPositions.Add(point);
+                        seaPointIndex = allowedTowerPositions.IndexOf(lastSeaPoint);
+                    }
                 }
             }
 
@@ -531,7 +540,7 @@ namespace Town
             }
             else
             {
-                var castleWall = CityWall.GetEdges().Union(Castle.Wall.GetEdges()).Distinct().SelectMany(e => new[]{e.A, e.B}).Where(w => Castle.Patch.Shape.Vertices.Contains(w)).ToList();
+                var castleWall = CityWall.GetEdges().Union(Castle.Wall.GetEdges()).Distinct().SelectMany(e => new[] { e.A, e.B }).Where(w => Castle.Patch.Shape.Vertices.Contains(w)).ToList();
                 var towers = CityWall.Towers.Union(Castle.Wall.Towers).Intersect(castleWall);
                 var gates = CityWall.Gates.Union(Castle.Wall.Gates).Intersect(castleWall);
                 geometry.Walls.AddRange(Edge.FromPointList(castleWall));

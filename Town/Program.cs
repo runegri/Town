@@ -26,6 +26,7 @@ namespace Town
                 Overlay = options.Overlay,
                 Patches = options.Patches,
                 Walls = options.Walls,
+                Water = options.Water,
                 Seed = options.Seed ?? new Random().Next()
             };
 
