@@ -29,9 +29,7 @@ namespace Town
                 Water = options.Water,
                 Seed = options.Seed ?? new Random().Next()
             };
-
-            Rnd.Seed = townOptions.Seed.Value;
-
+            
             var town = new Town(townOptions);
 
             var img = new TownRenderer(town, townOptions).DrawTown();

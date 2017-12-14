@@ -28,6 +28,7 @@ namespace Town
         public Town(TownOptions options)
         {
             Options = options;
+            Rnd.Seed = options.Seed.Value;
 
             var ok = false;
             while (!ok)
