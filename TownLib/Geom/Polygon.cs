@@ -627,6 +627,11 @@ namespace Town.Geom
             return new Polygon(newVertices);
         }
 
+        public bool OverlapsWith(Polygon other)
+        {
+            return other.Vertices.Any(ContainsPoint);
+        }
+
         public bool Equals(Polygon other)
         {
             if (ReferenceEquals(null, other))

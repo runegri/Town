@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Town.Geom;
 
 namespace Town
@@ -129,7 +130,7 @@ namespace Town
             return Patch.Shape.Buffer(insetDist);
         }
 
-        private static IEnumerable<Polygon> CreateAlleys(Polygon block, float minArea, float gridChaos, float sizeChaos, Func<Polygon, float> emptyProbabilityFunc, bool split, int levels = 0)
+        private IEnumerable<Polygon> CreateAlleys(Polygon block, float minArea, float gridChaos, float sizeChaos, Func<Polygon, float> emptyProbabilityFunc, bool split, int levels = 0)
         {
             Vector2 point = Vector2.Zero;
             var length = float.MinValue;
@@ -158,7 +159,7 @@ namespace Town
             {
                 if (half.Area() < minArea * Math.Pow(2, 4 * sizeChaos * (Rnd.NextDouble() - 0.5f)) || levels > 5)
                 {
-                    if (!Rnd.NextBool(emptyProbabilityFunc(half)))
+                    if (!Rnd.NextBool(emptyProbabilityFunc(half)) && !_town.River.OverlapsWith(half))
                     {
                         buildings.Add(half);
                     }
