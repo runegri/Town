@@ -32,6 +32,11 @@
             return new Rectangle(X - amount, Y - amount, Width + 2 * amount, Height + 2 * amount);
         }
 
+        public bool Contains(Vector2 point)
+        {
+            return point.x >= Left && point.x <= Right && point.y >= Top && point.y <= Bottom;
+        }
+
         public string ToSvgViewport()
         {
             return $"{X} {Y} {Width} {Height}";

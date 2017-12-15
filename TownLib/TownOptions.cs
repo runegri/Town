@@ -7,6 +7,7 @@
         public bool Water { get; set; }
         public int Patches { get; set; }
         public int? Seed { get; set; }
+        public bool River { get; set; }
 
         public static TownOptions Default => new TownOptions { Patches = 35 };
     }

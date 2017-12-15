@@ -19,7 +19,7 @@ namespace Town
             var v1 = list[0];
             var v2 = list[1];
 
-            var newVertices = new List<Vector2> {list[0]};
+            var newVertices = new List<Vector2> { list[0] };
 
             for (var v = 1; v < list.Count - 1; v++)
             {
@@ -31,6 +31,23 @@ namespace Town
 
             newVertices.Add(list.Last());
 
+            return newVertices;
+        }
+
+        public static List<Vector2> Complexify(this List<Vector2> list)
+        {
+            var newVertices = new List<Vector2> { list[0] };
+
+            for (var v = 1; v < list.Count; v++)
+            {
+                var v1 = list[v - 1];
+                var v2 = list[v];
+
+                var middle = new Vector2((v1.x + v2.x) / 2f, (v1.y + v2.y) / 2f);
+                newVertices.Add(middle);
+                newVertices.Add(v2);
+            }
+            
             return newVertices;
         }
     }

@@ -30,6 +30,15 @@ namespace Town.Geom
             this.y = (float) y;
         }
 
+        public Vector2(float angle)
+        {
+            x = (float)Math.Cos(angle);
+            y = -(float) Math.Sin(angle);
+        }
+
+        public Vector2(double angle) : this((float)angle)
+        { }
+
         public float Length => (float) Math.Sqrt(x * x + y * y);
 
         public bool IsValid => x < double.MaxValue - 1 && y < double.MaxValue - 1;
@@ -44,6 +53,11 @@ namespace Town.Geom
         {
             float magnitude = a.Length;
             return new Vector2(a.x / magnitude, a.y / magnitude);
+        }
+
+        public Vector2 Scale(float factor)
+        {
+            return Scale(this, factor);
         }
 
         public static Vector2 Scale(Vector2 a, float factor)

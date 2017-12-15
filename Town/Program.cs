@@ -27,6 +27,7 @@ namespace Town
                 Patches = options.Patches,
                 Walls = options.Walls,
                 Water = options.Water,
+                River = true,
                 Seed = options.Seed ?? new Random().Next()
             };
             

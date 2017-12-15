@@ -23,6 +23,7 @@ namespace Town
         public List<List<Vector2>> Roads { get; }
         public List<Patch> Overlay { get; }
         public List<Polygon> Water { get; }
+        public Polygon River { get; set; }
         public Polygon WaterBorder { get; set; }
     }
 }

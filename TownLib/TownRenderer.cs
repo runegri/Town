@@ -35,7 +35,7 @@ namespace Town
             sb.Append(".road-outer { stroke-width: 3.6; stroke: black; fill: none; }");
             sb.Append(".road-inner { stroke-width: 3; stroke: white; fill: none; }");
             sb.Append(".tower { fill: black; }");
-            sb.Append(".water { fill: #7799FF; fill-opacity: 0.6; stroke: none; }");
+            sb.Append(".water { fill: #7799FF; stroke: none; }");
             sb.Append(".overlay { fill: #FFFF00; fill-opacity: 0.2; stroke: black; stroke-width: 0.5; }");
             sb.Append("]]></style></defs>");
 
@@ -70,6 +70,11 @@ namespace Town
             if (_options.Overlay)
             {
                 DrawOverlay(geometry, sb);
+            }
+
+            if (_options.River)
+            {
+                DrawRiver(geometry, sb);
             }
 
             //sb.Append(geometry.WaterBorder.ToSvgPolygon("road-outer"));
@@ -138,6 +143,11 @@ namespace Town
             {
                 sb.Append($"<rect width=\"8\" height=\"8\" x=\"{gate.x - 4}\" y=\"{gate.y - 4}\" class=\"gate\" />");
             }
+        }
+
+        private static void DrawRiver(TownGeometry geometry, StringBuilder sb)
+        {
+            sb.Append(geometry.River.ToSvgPolygon("water"));
         }
     }
 }
