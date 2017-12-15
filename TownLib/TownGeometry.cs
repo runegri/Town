@@ -14,6 +14,7 @@ namespace Town
             Roads = new List<List<Vector2>>();
             Overlay = new List<Patch>();
             Water = new List<Polygon>();
+            River = new List<Polygon>();
         }
 
         public List<Building> Buildings { get; }
@@ -23,7 +24,7 @@ namespace Town
         public List<List<Vector2>> Roads { get; }
         public List<Patch> Overlay { get; }
         public List<Polygon> Water { get; }
-        public Polygon River { get; set; }
+        public List<Polygon> River { get; }
         public Polygon WaterBorder { get; set; }
     }
 }

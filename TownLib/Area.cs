@@ -159,7 +159,7 @@ namespace Town
             {
                 if (half.Area() < minArea * Math.Pow(2, 4 * sizeChaos * (Rnd.NextDouble() - 0.5f)) || levels > 5)
                 {
-                    if (!Rnd.NextBool(emptyProbabilityFunc(half)) && !_town.River.OverlapsWith(half))
+                    if (!Rnd.NextBool(emptyProbabilityFunc(half)) && !_town.River.Any(r => r.OverlapsWith(half)) && !_town.Roads.SelectMany(r => r).Any(r => half.ContainsPoint(r)))
                     {
                         buildings.Add(half);
                     }

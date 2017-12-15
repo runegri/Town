@@ -48,41 +48,46 @@ namespace Town
                 sb.Append(water.ToSvgPolygon("water"));
             }
 
-            var id = 0;
-            foreach (var building in geometry.Buildings)
+            if (_options.River)
             {
-                var hover = $"onmouseover =\"document.getElementById('building{id}').style.visibility = 'visible'\" onmouseout=\"document.getElementById('building{id}').style.visibility = 'hidden'\"";
-                sb.Append(building.Shape.ToSvgPolygon("building", hover));
-                id++;
+                DrawRiver(geometry, sb);
             }
 
             DrawRoads(geometry, sb);
+
+            DrawBuildings(geometry, sb);
+
             DrawWalls(geometry, sb);
 
-            id = 0;
-            foreach (var building in geometry.Buildings)
-            {
-                sb.Append("<text z-index=\"9\" id=\"building" + id + "\" class=\"building-description\" x=\"" + building.Shape.Vertices[0].x + "\" y=\"" + building.Shape.Vertices[0].y +
-                          "\">" + building.Description + "</text>");
-                id++;
-            }
+            //var id = 0;
+            //foreach (var building in geometry.Buildings)
+            //{
+            //    sb.Append("<text z-index=\"9\" id=\"building" + id + "\" class=\"building-description\" x=\"" + building.Shape.Vertices[0].x + "\" y=\"" + building.Shape.Vertices[0].y +
+            //              "\">" + building.Description + "</text>");
+            //    id++;
+            //}
 
             if (_options.Overlay)
             {
                 DrawOverlay(geometry, sb);
             }
 
-            if (_options.River)
-            {
-                DrawRiver(geometry, sb);
-            }
-
-            //sb.Append(geometry.WaterBorder.ToSvgPolygon("road-outer"));
-
             sb.Append($"<text x=\"{bounds.X + 20}\" y=\"{bounds.Y + 30}\">" + _options.Seed + "</text>");
 
             sb.Append("</svg>");
             return sb.ToString();
+        }
+
+        private static void DrawBuildings(TownGeometry geometry, StringBuilder sb)
+        {
+            var id = 0;
+            foreach (var building in geometry.Buildings)
+            {
+                var hover =
+                    $"onmouseover =\"document.getElementById('building{id}').style.visibility = 'visible'\" onmouseout=\"document.getElementById('building{id}').style.visibility = 'hidden'\"";
+                sb.Append(building.Shape.ToSvgPolygon("building", hover));
+                id++;
+            }
         }
 
         private static void DrawOverlay(TownGeometry geometry, StringBuilder sb)
@@ -147,7 +152,10 @@ namespace Town
 
         private static void DrawRiver(TownGeometry geometry, StringBuilder sb)
         {
-            sb.Append(geometry.River.ToSvgPolygon("water"));
+            foreach (var riverPart in geometry.River)
+            {
+                sb.Append(riverPart.ToSvgPolygon("water"));
+            }
         }
     }
 }

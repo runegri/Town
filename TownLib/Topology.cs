@@ -30,6 +30,9 @@ namespace Town
 
             _blocked.AddRange(town.Patches.Where(p => p.Water).SelectMany(p => p.Shape.Vertices).Distinct());
 
+            //var riverVertices = town.Patches.SelectMany(p => p.Shape.Vertices).Where(v => town.River.Any(r => r.ContainsPoint(v))).Distinct().ToList();
+            //_blocked.AddRange(riverVertices);
+
             var border = town.CityWall.Circumference;
 
             BuildTopology(town, border);

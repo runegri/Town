@@ -26,7 +26,7 @@ namespace Town
         public List<Vector2> Gates { get; }
 
         public List<Vector2> WaterBorder { get; }
-        public Polygon River { get; set; }
+        public List<Polygon> River { get; set; }
 
         public Town(TownOptions options)
         {
@@ -44,6 +44,7 @@ namespace Town
                 Center = new Vector2(Width / 2f * (1 + 0.1 * Rnd.NextDouble() - 0.1 * Rnd.NextDouble()), Height / 2f * (1 + 0.1 * Rnd.NextDouble() - 0.1 * Rnd.NextDouble()));
                 Patches = new List<Patch>();
                 WaterBorder = new List<Vector2>();
+                River = new List<Polygon> {new Polygon(new Vector2(Int32.MaxValue, Int32.MaxValue))};
 
                 try
                 {
@@ -141,11 +142,16 @@ namespace Town
 
             if (Options.River)
             {
-                River = CreateRiver();
+                River.AddRange(CreateRiver());
             }
 
-            patchesInTown = Patches.Where(p => !p.Water).OrderBy(p => (Center - p.Center).Length).Take(NumPatches)
-                .ToList();
+            patchesInTown = Patches.Where(p => !p.Water).OrderBy(p => (Center - p.Center).Length).Take(NumPatches).ToList();
+
+            var numPatchesWithRiver = patchesInTown.Count(p => River.Any(r => r.OverlapsWith(p.Shape)));
+
+            // Add space in town to accomodate for the river
+            patchesInTown = Patches.Where(p => !p.Water).OrderBy(p => (Center - p.Center).Length).Take(NumPatches + numPatchesWithRiver).ToList();
+
 
             foreach (var patch in patchesInTown)
             {
@@ -173,13 +179,13 @@ namespace Town
             }
         }
 
-        private Polygon CreateRiver()
+        private IEnumerable<Polygon> CreateRiver()
         {
             var river = new List<Vector2>();
 
             if (Options.Water)
             {
-                var closestWater = Patches.Where(p => p.Water).OrderBy(p => (Center - p.Center).Length).First();
+                var closestWater = Patches.Where(p => p.Water && p.GetAllNeighbours().All(n => n.Water)).OrderBy(p => (Center - p.Center).Length).First();
                 var farthestWater = Patches.Where(p => p.Water).OrderByDescending(p => (Center - p.Center).Length).First();
 
                 var riverStart = closestWater.Center;
@@ -227,7 +233,7 @@ namespace Town
             return RiverPolyFromPointList(river);
         }
 
-        private Polygon RiverPolyFromPointList(List<Vector2> riverPoints)
+        private IEnumerable<Polygon> RiverPolyFromPointList(List<Vector2> riverPoints)
         {
             var left = new List<Vector2>();
             var right = new List<Vector2>();
@@ -247,13 +253,14 @@ namespace Town
 
                 prev = point;
             }
-
-            left.Reverse();
-
+            
             right = right.Complexify().SmoothVertexList(3);
             left = left.Complexify().SmoothVertexList(3);
 
-            return new Polygon(right.Concat(left));
+            for (var i = 0; i < left.Count - 1; i++)
+            {
+                yield return new Polygon(left[i], right[i], right[i+1], left[i+1]);
+            }
         }
 
         private void SmoothPatches(Polygon vertices, float smoothAmount)
@@ -385,7 +392,6 @@ namespace Town
                 var street = topology.BuildPath(gate, endPoint, topology.Outer);
                 if (street != null)
                 {
-                    //roads.Add(street);
                     streets.Add(street);
 
                     if (CityWall.Gates.Contains(gate))
@@ -431,7 +437,7 @@ namespace Town
         {
             var roadEdges = roads.SelectMany(RoadToEdges).Distinct().ToList();
 
-            var arteries = new List<List<Vector2>>();
+            var road = new List<List<Vector2>>();
 
             while (roadEdges.Any())
             {
@@ -439,7 +445,7 @@ namespace Town
                 roadEdges.RemoveAt(0);
 
                 var attached = false;
-                foreach (var artery in arteries)
+                foreach (var artery in road)
                 {
                     if (artery[0].Equals(edge.B))
                     {
@@ -458,13 +464,13 @@ namespace Town
 
                 if (!attached)
                 {
-                    arteries.Add(new List<Vector2> { edge.A, edge.B });
+                    road.Add(new List<Vector2> { edge.A, edge.B });
                 }
             }
 
             var smoothed = new List<List<Vector2>>();
 
-            foreach (var tidyRoad in arteries)
+            foreach (var tidyRoad in road)
             {
                 var smoothedRoad = tidyRoad.SmoothVertexList(3);
 
@@ -645,7 +651,7 @@ namespace Town
             geometry.Overlay.AddRange(Patches);
             geometry.Water.AddRange(Patches.Where(p => p.Water).Select(p => p.Shape));
             geometry.WaterBorder = new Polygon(WaterBorder);
-            geometry.River = River;
+            geometry.River.AddRange(River);
 
             return geometry;
         }

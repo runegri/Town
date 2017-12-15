@@ -19,5 +19,8 @@ namespace Town
         [Option('t', DefaultValue = false, Required = false)]
         public bool Water { get; set; }
 
+        [Option('r', DefaultValue = false, Required = false)]
+        public bool River { get; set; }
+
     }
 }
