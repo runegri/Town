@@ -5,8 +5,9 @@ namespace Town
 {
     public class TownGeometry
     {
-        public TownGeometry()
+        public TownGeometry(Vector2 center)
         {
+            Center = center;
             Buildings = new List<Building>();
             Walls = new List<Edge>();
             Towers = new List<Vector2>();
@@ -17,6 +18,7 @@ namespace Town
             River = new List<Polygon>();
         }
 
+        public Vector2 Center { get; }
         public List<Building> Buildings { get; }
         public List<Edge> Walls { get; }
         public List<Vector2> Towers { get; }

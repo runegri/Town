@@ -44,7 +44,7 @@ namespace Town
                 Center = new Vector2(Width / 2f * (1 + 0.1 * Rnd.NextDouble() - 0.1 * Rnd.NextDouble()), Height / 2f * (1 + 0.1 * Rnd.NextDouble() - 0.1 * Rnd.NextDouble()));
                 Patches = new List<Patch>();
                 WaterBorder = new List<Vector2>();
-                River = new List<Polygon> {new Polygon(new Vector2(Int32.MaxValue, Int32.MaxValue))};
+                River = new List<Polygon> { new Polygon(new Vector2(Int32.MaxValue, Int32.MaxValue)) };
 
                 try
                 {
@@ -181,56 +181,77 @@ namespace Town
 
         private IEnumerable<Polygon> CreateRiver()
         {
-            var river = new List<Vector2>();
+            IEnumerable<Polygon> riverPolygon = null;
 
-            if (Options.Water)
+            var acceptableRiver = false;
+            while (!acceptableRiver)
             {
-                var closestWater = Patches.Where(p => p.Water && p.GetAllNeighbours().All(n => n.Water)).OrderBy(p => (Center - p.Center).Length).First();
-                var farthestWater = Patches.Where(p => p.Water).OrderByDescending(p => (Center - p.Center).Length).First();
 
-                var riverStart = closestWater.Center;
-                var riverDirection = Vector2.Normalize(Center - farthestWater.Center);
+                var river = new List<Vector2>();
 
-                var riverPoint = riverStart;
-                river.Add(riverStart);
-
-                while (_mapArea.Contains(riverPoint))
+                if (Options.Water)
                 {
-                    riverPoint = riverPoint + Vector2.Scale(riverDirection, 30f);
-                    river.Add(riverPoint);
-                }
-            }
-            else
-            {
-                var riverStart = new Vector2(Center.x + Rnd.Next(100) - Rnd.Next(100), Center.y + Rnd.Next(100) - Rnd.Next(100));
-                var riverDirection = Vector2.Normalize(new Vector2(Rnd.NextDouble() * Math.PI * 2));
+                    var closestWater = Patches.Where(p => p.Water && p.GetAllNeighbours().All(n => n.Water))
+                        .OrderBy(p => (Center - p.Center).Length).First();
+                    var farthestWater = Patches.Where(p => p.Water).OrderByDescending(p => (Center - p.Center).Length)
+                        .First();
 
-                river.Add(riverStart);
-                var riverPoint = riverStart;
-                while (_mapArea.Contains(riverPoint))
+                    var riverStart = closestWater.Center;
+                    var riverDirection = Vector2.Normalize(Center - farthestWater.Center);
+
+                    var riverPoint = riverStart;
+                    river.Add(riverStart);
+
+                    while (_mapArea.Contains(riverPoint))
+                    {
+                        riverPoint = riverPoint + Vector2.Scale(riverDirection, 30f);
+                        river.Add(riverPoint);
+                    }
+                }
+                else
                 {
-                    riverPoint = riverPoint + Vector2.Scale(riverDirection, 30f);
-                    river.Add(riverPoint);
+                    var centerPatch = Patches.OrderBy(p => (p.Center - Center).Length).First();
+                    var marketSize = (int)centerPatch.Shape.Vertices.Max(v1 => centerPatch.Shape.Vertices.Max(v2 => (v2 - v1).Length));
+
+                    var riverStart = Center;
+                    while (centerPatch.Shape.ContainsPoint(riverStart))
+                    {
+                        riverStart = new Vector2(Center.x + Rnd.Next(marketSize * 5) - Rnd.Next(marketSize * 5), Center.y + Rnd.Next(marketSize * 5) - Rnd.Next(marketSize * 5));
+                    }
+                    var riverDirection = Vector2.Normalize(new Vector2(Rnd.NextDouble() * Math.PI * 2));
+
+                    river.Add(riverStart);
+                    var riverPoint = riverStart;
+                    while (_mapArea.Contains(riverPoint))
+                    {
+                        riverPoint = riverPoint + Vector2.Scale(riverDirection, 30f);
+                        river.Add(riverPoint);
+                    }
+
+                    riverDirection = new Vector2(-riverDirection.x, -riverDirection.y);
+                    riverPoint = riverStart;
+                    while (_mapArea.Contains(riverPoint))
+                    {
+                        riverPoint = riverPoint + Vector2.Scale(riverDirection, 30f);
+                        river.Insert(0, riverPoint);
+                    }
                 }
 
-                riverDirection = new Vector2(-riverDirection.x, -riverDirection.y);
-                riverPoint = riverStart;
-                while (_mapArea.Contains(riverPoint))
+                var pointOffset =
+                    Vector2.Normalize(new Vector2(river[1].x - river[0].x, river[1].y - river[0].y).Rotate90());
+
+                for (var i = 1; i < river.Count; i++)
                 {
-                    riverPoint = riverPoint + Vector2.Scale(riverDirection, 30f);
-                    river.Insert(0, riverPoint);
+                    river[i] = river[i] + Vector2.Scale(pointOffset, Rnd.Next(50) - Rnd.Next(50));
                 }
+                river = river.Complexify().SmoothVertexList(2);
+
+                riverPolygon = RiverPolyFromPointList(river);
+
+                acceptableRiver = !riverPolygon.Any(p => p.ContainsPoint(Center));
             }
 
-            var pointOffset = Vector2.Normalize(new Vector2(river[1].x - river[0].x, river[1].y - river[0].y).Rotate90());
-
-            for (var i = 1; i < river.Count; i++)
-            {
-                river[i] = river[i] + Vector2.Scale(pointOffset, Rnd.Next(50) - Rnd.Next(50));
-            }
-            river = river.Complexify().SmoothVertexList(2);
-
-            return RiverPolyFromPointList(river);
+            return riverPolygon;
         }
 
         private IEnumerable<Polygon> RiverPolyFromPointList(List<Vector2> riverPoints)
@@ -253,13 +274,13 @@ namespace Town
 
                 prev = point;
             }
-            
+
             right = right.Complexify().SmoothVertexList(3);
             left = left.Complexify().SmoothVertexList(3);
 
             for (var i = 0; i < left.Count - 1; i++)
             {
-                yield return new Polygon(left[i], right[i], right[i+1], left[i+1]);
+                yield return new Polygon(left[i], right[i], right[i + 1], left[i + 1]);
             }
         }
 
@@ -481,7 +502,7 @@ namespace Town
                     if (PointOverWater(originalPoint))
                     {
                         // Extra smoothing for bridges
-                        var p0 = smoothedRoad[i > 0 ? i-1: smoothedRoad.Count-1];
+                        var p0 = smoothedRoad[i > 0 ? i - 1 : smoothedRoad.Count - 1];
                         var p1 = smoothedRoad[i];
                         var p2 = smoothedRoad[i + 1 % smoothedRoad.Count];
 
@@ -635,7 +656,7 @@ namespace Town
 
         public TownGeometry GetTownGeometry(TownOptions options)
         {
-            var geometry = new TownGeometry();
+            var geometry = new TownGeometry(Center);
 
             var buildingShapes = new List<Polygon>();
             foreach (var patch in Patches.Where(p => p.Area != null))

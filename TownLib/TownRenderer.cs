@@ -37,6 +37,7 @@ namespace Town
             sb.Append(".tower { fill: black; }");
             sb.Append(".water { fill: #7799FF; stroke: none; }");
             sb.Append(".overlay { fill: #FFFF00; fill-opacity: 0.2; stroke: black; stroke-width: 0.5; }");
+            sb.Append(".center { fill: #FF0000; fill-opacity: 0.5; }");
             sb.Append("]]></style></defs>");
 
             sb.Append(@"<rect width=""1500"" height=""1500"" x=""0"" y=""0"" fill=""#FCFCFA"" />");
@@ -96,6 +97,9 @@ namespace Town
             {
                 sb.Append(patch.Shape.ToSvgPolygon("overlay", $" id=\"{patch.Id}\""));
             }
+
+            var center = geometry.Center;
+            sb.Append($"<circle cx=\"{center.x}\" cy=\"{center.y}\" r=\"2.5\" class=\"center\" />");
         }
 
         private static void DrawRoads(TownGeometry geometry, StringBuilder sb)
