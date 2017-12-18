@@ -80,7 +80,8 @@ namespace Town
 
                     if (n0 != null && n1 != null)
                     {
-                        n0.Link(n1, (v0 - v1).Length);
+                        var overWater = town.PointOverWater(vertex);
+                        n0.Link(n1, (v0 - v1).Length, needsBridge: overWater);
                     }
                 }
             }
@@ -106,7 +107,18 @@ namespace Town
         public List<Vector2> BuildPath(Vector2 from, Vector2 to, List<Node> exclude = null)
         {
             var path = _graph.AStar(V2Node[from], V2Node[to], exclude);
-            return path?.Select(n => Node2V[n]).ToList();
+
+            if (path == null)
+            {
+                return null;
+            }
+
+            foreach (var link in path.SelectMany(n => n.Links))
+            {
+                link.Value.NeedsBridge = false;
+            }
+
+            return path.Select(n => Node2V[n]).ToList();
         }
     }
 }

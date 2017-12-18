@@ -477,6 +477,18 @@ namespace Town
                 for (var i = 0; i < tidyRoad.Count; i++)
                 {
                     var originalPoint = tidyRoad[i];
+
+                    if (PointOverWater(originalPoint))
+                    {
+                        // Extra smoothing for bridges
+                        var p0 = smoothedRoad[i > 0 ? i-1: smoothedRoad.Count-1];
+                        var p1 = smoothedRoad[i];
+                        var p2 = smoothedRoad[i + 1 % smoothedRoad.Count];
+
+                        var s = Vector2.SmoothVertex(p1, p0, p2, 10f);
+                        smoothedRoad[i] = s;
+                    }
+
                     var smoothedPoint = smoothedRoad[i];
                     var affectedPatches = Patches.Where(p => p.Shape.Vertices.Contains(originalPoint)).ToList();
                     foreach (var affectedPatch in affectedPatches)
@@ -614,6 +626,11 @@ namespace Town
                 yield return edge.A;
                 previous = edge;
             }
+        }
+
+        public bool PointOverWater(Vector2 point)
+        {
+            return River.Any(r => r.ContainsPoint(point));
         }
 
         public TownGeometry GetTownGeometry(TownOptions options)

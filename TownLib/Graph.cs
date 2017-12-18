@@ -49,7 +49,7 @@ namespace Town
 
                 foreach (var neighbour in current.Links.Keys.Except(closedSet))
                 {
-                    var score = currentScore + current.Links[neighbour];
+                    var score = currentScore + current.Links[neighbour].Price;
                     if (!openSet.Contains(neighbour))
                     {
                         openSet.Add(neighbour);
@@ -97,7 +97,7 @@ namespace Town
             {
                 if (current.Links.ContainsKey(next))
                 {
-                    price += current.Links[next];
+                    price += current.Links[next].Price;
                 }
                 else
                 {

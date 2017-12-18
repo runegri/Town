@@ -2,10 +2,22 @@
 
 namespace Town
 {
+    public class Link
+    {
+        private readonly float _price;
+        public float Price => NeedsBridge ? _price * 1000 : _price;
+        public bool NeedsBridge { get; set; }
+
+        public Link(float price, bool needsBridge = false)
+        {
+            _price = price;
+            NeedsBridge = needsBridge;
+        }
+    }
     public class Node
     {
         private static int _counter;
-        public Dictionary<Node, float> Links = new Dictionary<Node, float>();
+        public Dictionary<Node, Link> Links = new Dictionary<Node, Link>();
         public readonly int Id;
 
         public Node()
@@ -13,12 +25,12 @@ namespace Town
             Id = _counter++;
         }
 
-        public void Link(Node node, float price = 1f, bool symmetrical = true)
+        public void Link(Node node, float price = 1f, bool symmetrical = true, bool needsBridge = false)
         {
-            Links[node] = price;
+            Links[node] = new Link(price, needsBridge);
             if (symmetrical)
             {
-                node.Links[this] = price;
+                node.Links[this] = new Link(price, needsBridge);
             }
         }
 
